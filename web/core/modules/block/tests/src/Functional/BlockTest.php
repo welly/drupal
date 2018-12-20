@@ -242,6 +242,42 @@ class BlockTest extends BlockTestBase {
    * Tests the block operation links.
    */
   public function testBlockOperationLinks() {
+    $this->executeTestBlockOperationLinks();
+  }
+
+  public function testBlockOperationLinksWithLanguageNegotiator() {
+    \Drupal::service('module_installer')->install(['language', 'locale']);
+
+    $user = $this->drupalCreateUser([
+      'administer blocks',
+      'administer languages',
+      'access administration pages'
+    ]);
+    $this->drupalLogin($user);
+
+    // Test the block operation links for domain URL language detection.
+    // Add the Italian language.
+    ConfigurableLanguage::createFromLangcode('it')->save();
+
+    // Enable URL language detection.
+    $edit = [
+      'language_interface[enabled][language-url]' => TRUE,
+      'language_interface[weight][language-url]' => -10,
+    ];
+    $this->drupalPostForm('admin/config/regional/language/detection', $edit, t('Save settings'));
+
+    // Change the domain for the Italian language.
+    $edit = [
+      'language_negotiation_url_part' => LanguageNegotiationUrl::CONFIG_DOMAIN,
+      'domain[en]' => \Drupal::request()->getHost(),
+      'domain[it]' => 'it.example.com',
+    ];
+    $this->drupalPostForm('admin/config/regional/language/detection/url', $edit, t('Save configuration'));
+
+    $this->executeTestBlockOperationLinks();
+  }
+
+  protected function executeTestBlockOperationLinks() {
     $this->drupalGet('admin/structure/block');
     // Go to the select block form.
     $this->clickLink('Place block');
