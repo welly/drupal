@@ -363,7 +363,13 @@ class BlockListBuilder extends ConfigEntityListBuilder implements FormInterface 
         $query = $url->getOption('query');
         $destination = $query['destination'];
 
-        $destinationUrl = Url::fromUserInput($destination);
+        if (UrlHelper::isExternal($destination)) {
+          $destinationUrl = Url::fromUri($destination);
+        }
+        else {
+          $destinationUrl = Url::fromUserInput($destination);
+        }
+
         $destinationQuery = $destinationUrl->getOption('query');
         unset($destinationQuery['block-placement']);
 
